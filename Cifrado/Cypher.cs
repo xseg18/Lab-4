@@ -8,45 +8,58 @@ namespace Cifrado
 {
    public interface CYPHER
     {
-        string Cifrar(string original);
-        string Descifrar(string cifrado);
+        public string Cifrar(string original);
+        public string Descifrar(string cifrado);
     }
 
     public class Cesar: CYPHER
     {
         string clave = "%12([centrifugados CENTRIFUGADOS])34$";
-        Dictionary<char, int> cipher = new Dictionary<char, int>();
-        Dictionary<int, char> abc = new Dictionary<int, char>();
         public string Cifrar(string cifrar)
         {
-            //diccionario normal
-            for (int i = 0; i < 256; i++)
-            {
-                abc.Add(i, Convert.ToChar(i));
-            }
+            
+            Dictionary<int, char> cipher = new Dictionary<int, char>();
             //nuevo abecedario
             for (int i = 0; i < clave.Length; i++)
             {
-                cipher.Add(clave[i], i);
+                cipher.Add(i, clave[i]);
             }
             for (int i = 0; i < 256; i++)
             {
-                if (!cipher.ContainsKey(abc[i]))
+                if (!cipher.ContainsValue(Convert.ToChar(i)))
                 {
-                    cipher.Add(abc[i], cipher.Count);
+                    cipher.Add(cipher.Count, Convert.ToChar(i));
                 }
             }
             //cifrado
             string cifrado = "";
-            foreach(char l in cifrar)
+            foreach (char l in cifrar)
             {
-                cifrado += cipher[abc[Convert.ToInt32(l)]];
+                cifrado += cipher[Convert.ToInt32(l)];
             }
             return cifrado;
         }
         public string Descifrar(string cifrado)
         {
+            Dictionary<char, int> cipher = new Dictionary<char, int>();
+            //nuevo abecedario
+            for (int i = 0; i < clave.Length; i++)
+            {
+                cipher.Add( clave[i], i);
+            }
+            for (int i = 0; i < 256; i++)
+            {
+                if (!cipher.ContainsKey(Convert.ToChar(i)))
+                {
+                    cipher.Add(Convert.ToChar(i), cipher.Count);
+                }
+            }
+            //descifrado
             string descifrado = "";
+            foreach(char l in cifrado)
+            {
+                descifrado += Convert.ToChar(cipher[l]);
+            }
 
             return descifrado;
         }
