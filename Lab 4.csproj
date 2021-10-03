@@ -6,7 +6,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Cifrado\**" />
+    <Content Remove="Cifrado\**" />
+    <EmbeddedResource Remove="Cifrado\**" />
+    <None Remove="Cifrado\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Cifrado\Cifrado.csproj" />
   </ItemGroup>
 
 </Project>
