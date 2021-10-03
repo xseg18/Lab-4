@@ -7,9 +7,13 @@
 
   <ItemGroup>
     <Compile Remove="Cifrado\**" />
+    <Compile Remove="Parte 2\**" />
     <Content Remove="Cifrado\**" />
+    <Content Remove="Parte 2\**" />
     <EmbeddedResource Remove="Cifrado\**" />
+    <EmbeddedResource Remove="Parte 2\**" />
     <None Remove="Cifrado\**" />
+    <None Remove="Parte 2\**" />
   </ItemGroup>
 
   <ItemGroup>
