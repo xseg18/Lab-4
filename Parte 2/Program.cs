@@ -8,8 +8,8 @@ namespace Parte_2
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-            CYPHER<int> Cifrador = new ZigZag();
-            string x = Cifrador.Descifrar(Cifrador.Cifrar("TENgo HambRe CoÑO", 5), 5);
+            CYPHER<string> Cifrador = new Cesar();
+            string x = Cifrador.Descifrar(Cifrador.Cifrar("ESPACIO SIDERAL", "SECRETO"), "SECRETO");
         }
     }
 }
