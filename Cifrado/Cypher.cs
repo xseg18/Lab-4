@@ -17,12 +17,11 @@ namespace Cifrado
 
         public string Cifrar(string code, string key)
         {
-            string clave = key;
             Dictionary<int, char> cipher = new Dictionary<int, char>();
             //nuevo abecedario
-            for (int i = 0; i < clave.Length; i++)
+            for (int i = 0; i < key.Length; i++)
             {
-                cipher.Add(i, clave[i]);
+                cipher.Add(i, key[i]);
             }
             for (int i = 0; i < 256; i++)
             {
@@ -33,7 +32,7 @@ namespace Cifrado
             }
             //cifrado
             string cifrado = "";
-            foreach (char l in cifrar)
+            foreach (char l in code)
             {
                 cifrado += cipher[Convert.ToInt32(l)];
             }
@@ -43,9 +42,9 @@ namespace Cifrado
         {
             Dictionary<char, int> cipher = new Dictionary<char, int>();
             //nuevo abecedario
-            for (int i = 0; i < clave.Length; i++)
+            for (int i = 0; i < key.Length; i++)
             {
-                cipher.Add( clave[i], i);
+                cipher.Add( key[i], i);
             }
             for (int i = 0; i < 256; i++)
             {
@@ -56,7 +55,7 @@ namespace Cifrado
             }
             //descifrado
             string descifrado = "";
-            foreach(char l in cifrado)
+            foreach(char l in decode)
             {
                 descifrado += Convert.ToChar(cipher[l]);
             }
