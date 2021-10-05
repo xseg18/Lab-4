@@ -9,7 +9,7 @@ namespace Parte_2
         {
             Console.WriteLine("Hello World!");
             CYPHER<int> Cifrador = new ZigZag();
-            string x = Cifrador.Descifrar(Cifrador.Cifrar("TENgo HambRe CoÑO", 5), 5);
+            string x = Cifrador.Descifrar(Cifrador.Cifrar("ESPACIO SIDERAL", 5), 5);
         }
     }
 }
