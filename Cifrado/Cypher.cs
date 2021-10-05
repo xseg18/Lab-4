@@ -14,7 +14,6 @@ namespace Cifrado
 
     public class Cesar: CYPHER<string>
     {
-
         public string Cifrar(string code, string key)
         {
             Dictionary<int, char> cipher = new Dictionary<int, char>();
@@ -71,7 +70,7 @@ namespace Cifrado
             string cipher = "";
             int a = 0, b = 0;
             bool down = false;
-            char[,] zigzag = new char[key, code.Length + key];
+            char[,] zigzag = new char[key, code.Length + 2 * key];
             for (int i = 0; i < code.Length; i++)
             {
                 if (a == 0 || a == key - 1)
@@ -102,7 +101,6 @@ namespace Cifrado
         public string Descifrar(string decode, int key)
         {
             string decipher = "";
-            int a = 0, b = 0;
             int T = 1 + 1 + 2 * (key - 2);
             int C = decode.Length / T;
             List<string> zigzag = new List<string>();
@@ -112,12 +110,15 @@ namespace Cifrado
             decode = decode.Substring(0, decode.Length - C);
             while (decode != "")
             {
-                zigzag.Add(decode.Substring(0, T / C));
-                decode = decode.Substring(T / C);
+                zigzag.Add(decode.Substring(0, C * 2));
+                decode = decode.Substring(C * 2);
             }
             for (int i = 0; i < C; i++)
             {
-                decipher += zigzag[0][i];
+                if (zigzag[0][i] != '▄')
+                {
+                    decipher += zigzag[0][i];
+                }
                 for (int j = 2; j < zigzag.Count(); j++)
                 {
                     if (zigzag[j][2 * i] != '▄')
@@ -125,7 +126,10 @@ namespace Cifrado
                         decipher += zigzag[j][2 * i];
                     }
                 }
-                decipher += zigzag[1][i];
+                if (zigzag[1][i] != '▄')
+                {
+                    decipher += zigzag[1][i];
+                }
                 for (int j = zigzag.Count - 1; j >= 2; j--)
                 {
                     if (zigzag[j][2 * i + 1] != '▄')
