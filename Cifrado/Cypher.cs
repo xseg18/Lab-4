@@ -20,7 +20,10 @@ namespace Cifrado
             //nuevo abecedario
             for (int i = 0; i < key.Length; i++)
             {
-                cipher.Add(i, key[i]);
+                if (!cipher.ContainsValue(key[i]))
+                {
+                    cipher.Add(i, key[i]);
+                }
             }
             for (int i = 0; i < 256; i++)
             {
@@ -43,7 +46,10 @@ namespace Cifrado
             //nuevo abecedario
             for (int i = 0; i < key.Length; i++)
             {
-                cipher.Add( key[i], i);
+                if (!cipher.ContainsValue(key[i]))
+                {
+                    cipher.Add(key[i], i);
+                }
             }
             for (int i = 0; i < 256; i++)
             {
