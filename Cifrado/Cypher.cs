@@ -48,7 +48,7 @@ namespace Cifrado
             {
                 if (!cipher.ContainsValue(key[i]))
                 {
-                    cipher.Add(key[i], i);
+                    cipher.Add(key[i], cipher.Count);
                 }
             }
             for (int i = 0; i < 256; i++)
