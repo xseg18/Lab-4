@@ -22,7 +22,7 @@ namespace Cifrado
             {
                 if (!cipher.ContainsValue(key[i]))
                 {
-                    cipher.Add(i, key[i]);
+                    cipher.Add(cipher.Count, key[i]);
                 }
             }
             for (int i = 0; i < 256; i++)
