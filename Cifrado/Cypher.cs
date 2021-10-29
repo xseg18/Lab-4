@@ -8,143 +8,80 @@ namespace Cifrado
 {
    public interface CYPHER<T>
     {
-        string Cifrar(string code, T key);
-        string Descifrar(string decode, T key);
+        byte Cifrar(byte code, T key, T key2);
+        byte Descifrar(byte decode, T key, T key2);
     }
 
-    public class Cesar: CYPHER<string>
+    public class RSA : CYPHER<int>
     {
-        public string Cifrar(string code, string key)
+        public byte Cifrar(byte code, int key, int key2)
         {
-            Dictionary<int, char> cipher = new Dictionary<int, char>();
-            //nuevo abecedario
-            for (int i = 0; i < key.Length; i++)
-            {
-                if (!cipher.ContainsValue(key[i]))
-                {
-                    cipher.Add(cipher.Count, key[i]);
-                }
-            }
-            for (int i = 0; i < 256; i++)
-            {
-                if (!cipher.ContainsValue(Convert.ToChar(i)))
-                {
-                    cipher.Add(cipher.Count, Convert.ToChar(i));
-                }
-            }
-            //cifrado
-            string cifrado = "";
-            foreach (char l in code)
-            {
-                cifrado += cipher[Convert.ToInt32(l)];
-            }
-            return cifrado;
-        }
-        public string Descifrar(string decode, string key)
-        {
-            Dictionary<char, int> cipher = new Dictionary<char, int>();
-            //nuevo abecedario
-            for (int i = 0; i < key.Length; i++)
-            {
-                if (!cipher.ContainsValue(key[i]))
-                {
-                    cipher.Add(key[i], cipher.Count);
-                }
-            }
-            for (int i = 0; i < 256; i++)
-            {
-                if (!cipher.ContainsKey(Convert.ToChar(i)))
-                {
-                    cipher.Add(Convert.ToChar(i), cipher.Count);
-                }
-            }
-            //descifrado
-            string descifrado = "";
-            foreach(char l in decode)
-            {
-                descifrado += Convert.ToChar(cipher[l]);
-            }
-
-            return descifrado;
-        }
-    }
-
-    public class ZigZag: CYPHER<int>
-    {
-        public string Cifrar(string code, int key)
-        {
-            string cipher = "";
-            int a = 0, b = 0;
-            bool down = false;
-            char[,] zigzag = new char[key, code.Length + 2 * key];
-            for (int i = 0; i < code.Length; i++)
-            {
-                if (a == 0 || a == key - 1)
-                {
-                    down = !down;
-                }
-                zigzag[a, b++] = code[i];
-                a = down ? a + 1 : a - 1;
-            }
-            while (a != 0)
-            {
-                if (a == 0 || a == key - 1)
-                {
-                    down = !down;
-                }
-                zigzag[a, b++] = '▄';
-                a = down ? a + 1 : a - 1;
-            }
-            foreach (var item in zigzag)
-            {
-                if (item != '\0')
-                {
-                    cipher += item;
-                }
-            }
+            int n = generarLlaves(key, key2).Item1;
+            int e = generarLlaves(key, key2).Item2;
+            byte cipher = Convert.ToByte(Math.Pow(code, e) % n);
             return cipher;
         }
-        public string Descifrar(string decode, int key)
+        public byte Descifrar(byte decode, int key, int key2)
         {
-            string decipher = "";
-            int T = 1 + 1 + 2 * (key - 2);
-            int C = decode.Length / T;
-            List<string> zigzag = new List<string>();
-            zigzag.Add(decode.Substring(0, C));
-            decode = decode.Substring(C);
-            zigzag.Add(decode.Substring(decode.Length - C));
-            decode = decode.Substring(0, decode.Length - C);
-            while (decode != "")
-            {
-                zigzag.Add(decode.Substring(0, C * 2));
-                decode = decode.Substring(C * 2);
-            }
-            for (int i = 0; i < C; i++)
-            {
-                if (zigzag[0][i] != '▄')
-                {
-                    decipher += zigzag[0][i];
-                }
-                for (int j = 2; j < zigzag.Count(); j++)
-                {
-                    if (zigzag[j][2 * i] != '▄')
-                    {
-                        decipher += zigzag[j][2 * i];
-                    }
-                }
-                if (zigzag[1][i] != '▄')
-                {
-                    decipher += zigzag[1][i];
-                }
-                for (int j = zigzag.Count - 1; j >= 2; j--)
-                {
-                    if (zigzag[j][2 * i + 1] != '▄')
-                    {
-                        decipher += zigzag[j][2 * i + 1];
-                    }
-                }
-            }
+            int n = generarLlaves(key, key2).Item1;
+            int d = generarLlaves(key, key2).Item3;
+            byte decipher = Convert.ToByte(Math.Pow(decode, d) % n);
             return decipher;
+
+        }
+        (int, int, int) generarLlaves(int p, int q)
+        {
+            if(primo(p) && primo(q) && p <= 512 && q <= 512)
+            {
+                int n = p * q;
+                int phi = (p - 1) * (q - 1);
+                Random rand = new Random();
+                int e = rand.Next(1, phi);
+                int mcd = MCD(e, phi);
+                while (mcd != 1)
+                {
+                    e = rand.Next(1, phi);
+                    mcd = MCD(e, phi);
+                }
+                int alpha = phi - (phi / e) * e;
+                int beta = phi - (phi / e) * mcd;
+                int theta = e - (e / alpha) * alpha;
+                int lambda = mcd - (e / alpha) * beta;
+                while(lambda < 0)
+                {
+                    lambda += phi;
+                }
+                int d = beta - (alpha / theta) * lambda;
+                return (n, e, d); 
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+        bool primo(int primo)
+        {
+            for (int i = 2; i < primo; i++)
+            {
+                if(i%2 == 0)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        int MCD(int m, int n)
+        {
+            int a = Math.Max(m, n);
+            int b = Math.Min(m, n);
+            int mcd = 0;
+            do
+            {
+                mcd = b;
+                b = a % b;
+                a = mcd;
+            } while (b != 0);
+            return mcd;
         }
     }
 }
