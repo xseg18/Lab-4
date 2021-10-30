@@ -22,7 +22,7 @@ namespace Cifrado
             return x;
         }
         
-        public (int, int, int) generarLlaves(int p, int q)
+        public (int n, int e, int d) generarLlaves(int p, int q)
         {
             if(primo(p) && primo(q) && p <= 512 && q <= 512)
             {
