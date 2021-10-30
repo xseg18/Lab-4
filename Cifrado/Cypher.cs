@@ -4,49 +4,59 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
+using System.Numerics;
+
 namespace Cifrado
 {
-   public interface CYPHER<T>
-    {
-        byte Cifrar(byte code, T key, T key2);
-        byte Descifrar(byte decode, T key, T key2);
-    }
+   public interface CYPHER
+   {
+        byte Cifer(byte code, int key, int key2);
+   }
 
-    public class RSA : CYPHER<int>
+    public class RSA : CYPHER
     {
-        public byte Cifrar(byte code, int key, int key2)
+        public byte Cifer(byte code, int n, int k)
         {
-            int n = generarLlaves(key, key2).Item1;
-            int e = generarLlaves(key, key2).Item2;
-            byte cipher = Convert.ToByte(Math.Pow(code, e) % n);
-            return cipher;
+            var i = BigInteger.ModPow(code, k, n);
+            byte x = (byte)i;
+            return x;
         }
-        public byte Descifrar(byte decode, int key, int key2)
-        {
-            int n = generarLlaves(key, key2).Item1;
-            int d = generarLlaves(key, key2).Item3;
-            byte decipher = Convert.ToByte(Math.Pow(decode, d) % n);
-            return decipher;
-
-        }
-        (int, int, int) generarLlaves(int p, int q)
+        
+        public (int, int, int) generarLlaves(int p, int q)
         {
             if(primo(p) && primo(q) && p <= 512 && q <= 512)
             {
                 int n = p * q;
                 int phi = (p - 1) * (q - 1);
-                Random rand = new Random();
-                int e = rand.Next(1, phi);
-                int mcd = MCD(e, phi);
-                while (mcd != 1)
+                int e = 2;
+                int alpha = 1;
+                bool a = false;
+                while (!a)
                 {
-                    e = rand.Next(1, phi);
-                    mcd = MCD(e, phi);
+                    while (e < phi)
+                    {
+                        if (primo(e) && MCD(e, phi) == 1)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            e++;    
+                        }
+                    }
+                    alpha = phi - (phi / e) * e;
+                    if(alpha != e - 1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        e++;
+                    }
                 }
-                int alpha = phi - (phi / e) * e;
-                int beta = phi - (phi / e) * mcd;
+                int beta = phi - (phi / e) * 1;
                 int theta = e - (e / alpha) * alpha;
-                int lambda = mcd - (e / alpha) * beta;
+                int lambda = 1 - (e / alpha) * beta;
                 while(lambda < 0)
                 {
                     lambda += phi;
@@ -63,7 +73,7 @@ namespace Cifrado
         {
             for (int i = 2; i < primo; i++)
             {
-                if(i%2 == 0)
+                if ((primo % i) == 0)
                 {
                     return false;
                 }
