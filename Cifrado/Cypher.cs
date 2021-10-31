@@ -10,12 +10,12 @@ namespace Cifrado
 {
    public interface CYPHER
    {
-        byte Cifer(byte code, int key, int key2);
+        byte Cipher(byte code, int key, int key2);
    }
 
     public class RSA : CYPHER
     {
-        public byte Cifer(byte code, int n, int k)
+        public byte Cipher(byte code, int n, int k)
         {
             var i = BigInteger.ModPow(code, k, n);
             byte x = (byte)i;

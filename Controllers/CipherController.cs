@@ -7,126 +7,103 @@ using Cifrado;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using System.Text;
+using System.IO.Compression;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Lab_4.Controllers
 {
     [ApiController]
-    [Route("api")]
+    [Route("api/rsa")]
     public class CipherController : Controller
     {
-        [Route("cipher/{method}")]
-        [HttpPost]
-        public ActionResult Cipher([FromRoute] string method, string key, IFormFile file)
+        public static IWebHostEnvironment environment;
+        public CipherController(IWebHostEnvironment _environment)
         {
-            if (method.ToUpper() == "CESAR")
-            {
-                try
-                {
-                    if (file.Length > 0)
-                    {
-                        var fileBytes = (dynamic)null;
-                        var cipheredBytes = (dynamic)null;
-                        using (var ms = new MemoryStream())
-                        {
-                            file.CopyTo(ms);
-                            fileBytes = ms.ToArray();
-                        }
-                        CYPHER<string> cipher = new Cesar();
-                        cipheredBytes = Encoding.UTF8.GetBytes(cipher.Cifrar(Encoding.UTF8.GetString(fileBytes), key));
-                        System.IO.File.WriteAllBytes(file.FileName.Substring(0, file.FileName.Length - 4) + ".csr", cipheredBytes);
-                        return Ok("Archivo cifrado en: " + Environment.CurrentDirectory);
-                    }
-                    return BadRequest();
-                }
-                catch (Exception)
-                {
-
-                    return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-                }
-            }
-            else if (method.ToUpper() == "ZIGZAG")
-            {
-                try
-                {
-                    int n;
-                    if (int.TryParse(key, out n))
-                    {
-                        if (file.Length > 0)
-                        {
-                            var fileBytes = (dynamic)null;
-                            var cipheredBytes = (dynamic)null;
-                            using (var ms = new MemoryStream())
-                            {
-                                file.CopyTo(ms);
-                                fileBytes = ms.ToArray();
-                            }
-                            CYPHER<int> cipher = new ZigZag();
-                            cipheredBytes = Encoding.UTF8.GetBytes(cipher.Cifrar(Encoding.UTF8.GetString(fileBytes), n));
-                            System.IO.File.WriteAllBytes(file.FileName.Substring(0, file.FileName.Length - 4) + ".zz", cipheredBytes);
-                            return Ok("Archivo cifrado en: " + Environment.CurrentDirectory);
-                        }
-                        return BadRequest();
-                    }
-                    return BadRequest();
-                }
-                catch (Exception)
-                {
-                    return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-                }
-            }
-            else
-            {
-                return BadRequest();
-            }
+            environment = _environment;
         }
-        [Route("decipher")]
-        [HttpPost]
-        public ActionResult Decipher(string key, IFormFile file)
+
+        [Route("keys/{p}/{q}")]
+        [HttpGet]
+        public ActionResult Keys([FromRoute] int p, [FromRoute] int q)
         {
             try
             {
-                if (file.Length > 0)
+                if (p > 0 && q > 0)
                 {
-                    var fileBytes = (dynamic)null;
-                    var decipheredBytes = (dynamic)null;
-                    if (file.FileName.Contains(".csr"))
+                    RSA rsa = new RSA();
+                    var keys = rsa.generarLlaves(p, q);
+                    if (System.IO.File.Exists(Environment.CurrentDirectory + "\\Keys.zip"))
                     {
-                        using (var ms = new MemoryStream())
-                        {
-                            file.CopyTo(ms);
-                            fileBytes = ms.ToArray();
-                        }
-                        CYPHER<string> cipher = new Cesar();
-                        decipheredBytes = Encoding.UTF8.GetBytes(cipher.Descifrar(Encoding.UTF8.GetString(fileBytes), key));
-                        System.IO.File.WriteAllBytes(file.FileName.Substring(0, file.FileName.Length - 4) + ".txt", decipheredBytes);
-                        return Ok("Archivo decifrado en: " + Environment.CurrentDirectory);
+                        System.IO.File.Delete(Environment.CurrentDirectory + "\\Keys.zip");
                     }
-                    else if (file.FileName.Contains(".zz"))
+                    using (ZipArchive zip = ZipFile.Open("Keys.zip", ZipArchiveMode.Create))
                     {
-                        int n;
-                        if (int.TryParse(key, out n))
+                        ZipArchiveEntry entry = zip.CreateEntry("private.key");
+                        using (StreamWriter writer = new StreamWriter(entry.Open()))
                         {
-                            using (var ms = new MemoryStream())
-                            {
-                                file.CopyTo(ms);
-                                fileBytes = ms.ToArray();
-                            }
-                            CYPHER<int> cipher = new ZigZag();
-                            decipheredBytes = Encoding.UTF8.GetBytes(cipher.Descifrar(Encoding.UTF8.GetString(fileBytes), n));
-                            System.IO.File.WriteAllBytes(file.FileName.Substring(0, file.FileName.Length - 3) + ".txt", decipheredBytes);
-                            return Ok("Archivo decifrado en: " + Environment.CurrentDirectory);
+                            writer.WriteLine(keys.n + "," + keys.d);
                         }
-                        return BadRequest();
+                        entry = zip.CreateEntry("public.key");
+                        using (StreamWriter writer = new StreamWriter(entry.Open()))
+                        {
+                            writer.WriteLine(keys.n + "," + keys.e);
+                        }
                     }
+                    return Ok();
+                }
+                else
+                {
                     return BadRequest();
                 }
-                return BadRequest();
             }
             catch (Exception)
             {
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
-            
+        }
+
+        [Route("{nombre}")]
+        [HttpPost]
+        public ActionResult Encode([FromRoute] string nombre, IFormFile keyFile, IFormFile file)
+        {
+            try
+            {
+                if (file.Length > 0 && keyFile.Length > 0)
+                {
+                    List<byte> list = new List<byte>();
+                    if (!Directory.Exists(environment.WebRootPath + "\\Upload\\"))
+                    {
+                        Directory.CreateDirectory(environment.WebRootPath + "\\Upload\\");
+                    }
+                    using (FileStream stream = new FileStream(environment.WebRootPath + "\\Upload\\" + keyFile.FileName, FileMode.Create))
+                    {
+                        keyFile.CopyTo(stream);
+                    }
+                    using (FileStream stream = new FileStream(environment.WebRootPath + "\\Upload\\" + file.FileName, FileMode.Create))
+                    {
+                        file.CopyTo(stream);
+                    }
+                    StreamReader reader = new StreamReader(environment.WebRootPath + "\\Upload\\" + keyFile.FileName);
+                    var keys = reader.ReadLine().Split(',');
+                    byte[] bytes = System.IO.File.ReadAllBytes(environment.WebRootPath + "\\Upload\\" + file.FileName);
+                    RSA rsa = new RSA();
+                    foreach (byte item in bytes)
+                    {
+                        list.Add(rsa.Cipher(item, Convert.ToInt32(keys[0]), Convert.ToInt32(keys[1])));
+                    }
+                    string ext = Path.GetExtension(environment.WebRootPath + "\\Upload\\" + file.FileName);
+                    System.IO.File.WriteAllBytes(nombre + ext, list.ToArray());
+                    return Ok();
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception)
+            {
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
         }
     }
 }

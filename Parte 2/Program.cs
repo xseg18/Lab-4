@@ -13,8 +13,8 @@ namespace Parte_2
             int n = llaves.n;
             int e = llaves.e;
             int d = llaves.d;
-            byte cifrar = rsa.Cifer(code, n, e);
-            byte descifrar = rsa.Cifer(cifrar, n, d);
+            byte cifrar = rsa.Cipher(code, n, e);
+            byte descifrar = rsa.Cipher(cifrar, n, d);
         }
     }
 }
