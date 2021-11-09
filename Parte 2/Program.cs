@@ -7,14 +7,12 @@ namespace Parte_2
     {
         static void Main(string[] args)
         {
-            byte code = 102;
+            byte code = Convert.ToByte(290);
             Cifrado.RSA rsa = new RSA();
             var llaves = rsa.generarLlaves(23, 13);
             int n = llaves.n;
             int e = llaves.e;
             int d = llaves.d;
-            byte cifrar = rsa.Cipher(code, n, e);
-            byte descifrar = rsa.Cipher(cifrar, n, d);
         }
     }
 }
