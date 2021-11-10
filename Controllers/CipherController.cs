@@ -28,32 +28,40 @@ namespace Lab_4.Controllers
         {
             try
             {
-                if (p > 0 && q > 0)
+                if (p > 0 && q > 0 )
                 {
-                    RSA rsa = new RSA();
-                    var keys = rsa.generarLlaves(p, q);
-                    if (System.IO.File.Exists(Environment.CurrentDirectory + "\\Keys.zip"))
+                    if(primo(p) && primo(q) && p < 512 && q < 512)
                     {
-                        System.IO.File.Delete(Environment.CurrentDirectory + "\\Keys.zip");
+                        RSA rsa = new RSA();
+                        var keys = rsa.generarLlaves(p, q);
+                        if (System.IO.File.Exists(Environment.CurrentDirectory + "\\Keys.zip"))
+                        {
+                            System.IO.File.Delete(Environment.CurrentDirectory + "\\Keys.zip");
+                        }
+                        using (ZipArchive zip = ZipFile.Open("Keys.zip", ZipArchiveMode.Create))
+                        {
+                            ZipArchiveEntry entry = zip.CreateEntry("private.key");
+                            using (StreamWriter writer = new StreamWriter(entry.Open()))
+                            {
+                                writer.WriteLine(keys.n + "," + keys.d);
+                            }
+                            entry = zip.CreateEntry("public.key");
+                            using (StreamWriter writer = new StreamWriter(entry.Open()))
+                            {
+                                writer.WriteLine(keys.n + "," + keys.e);
+                            }
+                        }
+                        return Ok();
                     }
-                    using (ZipArchive zip = ZipFile.Open("Keys.zip", ZipArchiveMode.Create))
+                    else
                     {
-                        ZipArchiveEntry entry = zip.CreateEntry("private.key");
-                        using (StreamWriter writer = new StreamWriter(entry.Open()))
-                        {
-                            writer.WriteLine(keys.n + "," + keys.d);
-                        }
-                        entry = zip.CreateEntry("public.key");
-                        using (StreamWriter writer = new StreamWriter(entry.Open()))
-                        {
-                            writer.WriteLine(keys.n + "," + keys.e);
-                        }
+                        return BadRequest("Ambos números debes de ser primos y menores a 512");
                     }
-                    return Ok();
+                    
                 }
                 else
                 {
-                    return BadRequest();
+                    return BadRequest("Llene las llaves correctamente");
                 }
             }
             catch (Exception)
@@ -90,11 +98,20 @@ namespace Lab_4.Controllers
                     byte[] bytes = System.IO.File.ReadAllBytes(environment.WebRootPath + "\\Upload\\" + file.FileName);
                     byte max = bytes.Max();
                     RSA rsa = new RSA();
-                    List<byte> prueba = rsa.Cipher(bytes, Convert.ToInt32(keys[0]), Convert.ToInt32(keys[1]));
+                    List<byte> prueba;
+                    if (keyFile.Name.Contains("private"))
+                    {
+                        prueba = rsa.Decipher(bytes, Convert.ToInt32(keys[0]), Convert.ToInt32(keys[1]));
+                    }
+                    else
+                    {
+                        prueba = rsa.Cipher(bytes, Convert.ToInt32(keys[0]), Convert.ToInt32(keys[1]));
+                    }
                     string ext = Path.GetExtension(environment.WebRootPath + "\\Upload\\" + file.FileName);
                     System.IO.File.WriteAllBytes(nombre + ext, prueba.ToArray());
                     reader.Close();
                     return Ok();
+                    
                 }
                 else
                 {
@@ -107,49 +124,17 @@ namespace Lab_4.Controllers
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
         }
-        [HttpPost]
-        public ActionResult Decode(IFormFile keyFile, IFormFile file)
+        bool primo(int primo)
         {
-            try
+            for (int i = 2; i < primo; i++)
             {
-                if (file.Length > 0 && keyFile.Length > 0)
+                if ((primo % i) == 0)
                 {
-                    List<byte> list = new List<byte>();
-                    if (!Directory.Exists(environment.WebRootPath + "\\Upload\\"))
-                    {
-                        Directory.CreateDirectory(environment.WebRootPath + "\\Upload\\");
-                    }
-                    using (FileStream stream = new FileStream(environment.WebRootPath + "\\Upload\\" + keyFile.FileName, FileMode.Create))
-                    {
-                        keyFile.CopyTo(stream);
-                        stream.Close();
-                    }
-                    using (FileStream stream = new FileStream(environment.WebRootPath + "\\Upload\\" + file.FileName, FileMode.Create))
-                    {
-                        file.CopyTo(stream);
-                        stream.Close();
-                    }
-                    StreamReader reader = new StreamReader(environment.WebRootPath + "\\Upload\\" + keyFile.FileName);
-                    var keys = reader.ReadLine().Split(',');
-                    byte[] bytes = System.IO.File.ReadAllBytes(environment.WebRootPath + "\\Upload\\" + file.FileName);
-                    RSA rsa = new RSA();
-                    byte max = bytes.Max();
-                    list = rsa.Decipher(bytes, Convert.ToInt32(keys[0]), Convert.ToInt32(keys[1]));
-                    string ext = Path.GetExtension(environment.WebRootPath + "\\Upload\\" + file.FileName);
-                    System.IO.File.WriteAllBytes(file.FileName + "_decoded"+ ext, list.ToArray());
-                    reader.Close();
-                    return Ok();
-                }
-                else
-                {
-                    return BadRequest();
+                    return false;
                 }
             }
-            catch (Exception e)
-            {
-                string x = e.Message;
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
+            return true;
         }
     }
+
 }
