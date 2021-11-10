@@ -99,13 +99,17 @@ namespace Lab_4.Controllers
                     byte max = bytes.Max();
                     RSA rsa = new RSA();
                     List<byte> prueba;
-                    if (keyFile.Name.Contains("private"))
+                    if (keyFile.Name == "private.key")
                     {
                         prueba = rsa.Decipher(bytes, Convert.ToInt32(keys[0]), Convert.ToInt32(keys[1]));
                     }
-                    else
+                    else if(keyFile.Name == "public.key")
                     {
                         prueba = rsa.Cipher(bytes, Convert.ToInt32(keys[0]), Convert.ToInt32(keys[1]));
+                    }
+                    else
+                    {
+                        return BadRequest("El archivo llave no es correcto");
                     }
                     string ext = Path.GetExtension(environment.WebRootPath + "\\Upload\\" + file.FileName);
                     System.IO.File.WriteAllBytes(nombre + ext, prueba.ToArray());
